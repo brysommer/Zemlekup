@@ -91,7 +91,7 @@ const sendNewRowsToTelegram = async (spreadsheetId, sheetName, columnName, chatI
   rowDataArray.forEach((rowData, index) => {
       const rowNumber = newRows[index];
       //correct message 
-      const rowText = `\u{1F4CA} Лот №  ${rowNumber} \n ${rowData.values[0][0]} \n ${rowData.values[0][1]} \n ${rowData.values[0][2]} \n \u{1F69C} ${rowData.values[0][3]} \n ${rowData.values[0][4]}`;; // Adds a smiley emoji
+      const rowText = `\u{1F4CA} ${rowData.values[0][0]} \n ${rowData.values[0][1]} \n ${rowData.values[0][2]} \n ${rowData.values[0][3]} \n \u{1F69C} ${rowData.values[0][4]}`;; // Adds a smiley emoji
       bot.sendMessage(chatId, rowText, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${rowNumber}` }]] } });
   });
 };

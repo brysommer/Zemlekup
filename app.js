@@ -18,7 +18,7 @@ bot.on('message', async (message) => {
       if (data.values && data.values.length > 0) {
         const message = data.values[0].join('\n')
         .replace(/^/, '\u{1F4CA} ') // add diagramm in 1 line 
-        .replace(/^.*\n.*\n.*\n/, '$&\u{1F69C} '); // add tractor in 4 line
+        .replace(/^.*\n.*\n.*\n.*\n/, '$&\u{1F69C} '); // add tractor in 4 line
         const keyboard = { inline_keyboard: [[{ 
           text: 'Скористайтеся ботом, щоб зробити замовлення',
           url: dataBot.botUrl,
