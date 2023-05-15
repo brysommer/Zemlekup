@@ -45,6 +45,7 @@ export const anketaListiner = async() => {
       {command: '/start', description: 'Почати'},
       {command: '/list', description: 'Показати доступні лоти'},
     ]);
+
     bot.onText(/\/start/ , (msg) => {
         customerPhone = undefined;
         customerName = undefined;
@@ -52,7 +53,7 @@ export const anketaListiner = async() => {
             reply_markup: { keyboard: keyboards.startingKeyboard, resize_keyboard: true, one_time_keyboard: true }
         });
     });
-    //'Купити ділянку' button handler
+
     bot.on("callback_query", async (query) => {
       selectedOrderRaw = query.data;
       const chatId = query.message.chat.id;
@@ -65,9 +66,11 @@ export const anketaListiner = async() => {
         bot.sendMessage(chatId, phrases.contactRequest, { reply_markup: { keyboard: keyboards.contactRequest, resize_keyboard: true }});
       } else bot.sendMessage(chatId, 'є замовлення від іншого користувача');
     })
+
     bot.onText(/\/list/ , async (msg) => {
       await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.statusColumn, msg.chat.id, bot);     
     });
+    
     bot.on('message', async (msg) => {
       console.log(customerInfo);
       const chatId = msg.chat.id;
