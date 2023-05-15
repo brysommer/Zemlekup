@@ -1,15 +1,14 @@
 import bot from "./app.js";
-import { sendToRawContact, sendToRawStatusReserve, sendToRawStatusDone } from './writegoog.js'
-import { changeMessage } from "./editChannel.js";
-import { googleFindMessageId, sendNewRowsToTelegram } from './crawler.js';
-import { getSpreadsheetData, searchForNew } from "./filedata.js";
+import { sendNewRowsToTelegram } from './crawler.js';
+import { searchForNew } from "./filedata.js";
 import { dataBot } from './values.js';
+import { writeGoogle, readGoogle } from './crud.js';
+import { checkStatus } from './interval.js';
 
 let customerPhone;
 let customerName;
 let customerInfo = {};
 let selectedOrderRaw;
-
 
 
 const spreadsheetId = dataBot.googleSheetId;
@@ -58,20 +57,21 @@ export const anketaListiner = async() => {
       selectedOrderRaw = query.data;
       const chatId = query.message.chat.id;
       customerInfo[chatId] = { lotNumber : query.data, phone: undefined, name: undefined };
-      const range = `post!N${ customerInfo[chatId].lotNumber }`;
-      const statusNew = await searchForNew(spreadsheetId, range)
+      const statusNew = await searchForNew(spreadsheetId, `${dataBot.googleSheetName}!${dataBot.statusColumn}${customerInfo[chatId].lotNumber}`)
       if (statusNew) {
-        sendToRawStatusReserve(customerInfo[chatId].lotNumber);
+        await writeGoogle(`${dataBot.googleSheetName}!${dataBot.statusColumn}${customerInfo[chatId].lotNumber}`, [['reserve']]);
+        checkStatus(selectedOrderRaw, chatId);
+        await writeGoogle(`${dataBot.googleSheetName}!${dataBot.user.idColumn}${customerInfo[chatId].lotNumber}`, [[`${chatId}`]]);
         bot.sendMessage(chatId, phrases.contactRequest, { reply_markup: { keyboard: keyboards.contactRequest, resize_keyboard: true }});
       } else bot.sendMessage(chatId, 'є замовлення від іншого користувача');
     })
     bot.onText(/\/list/ , async (msg) => {
-      await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.lotStatusColumn, msg.chat.id, bot);     
+      await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.statusColumn, msg.chat.id, bot);     
     });
     bot.on('message', async (msg) => {
       console.log(customerInfo);
       const chatId = msg.chat.id;
-      if (msg.text === 'Зробити замовлення') await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.lotStatusColumn, chatId, bot);
+      if (msg.text === 'Зробити замовлення') await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.statusColumn, chatId, bot);
       else if (msg.contact) {
         if (!customerInfo[chatId]) {
           customerInfo[chatId] = {};
@@ -84,17 +84,19 @@ export const anketaListiner = async() => {
           reply_markup: { keyboard: keyboards.dataConfirmation, resize_keyboard: true, one_time_keyboard: true }});
       } else if(msg.text === 'Так, Оформити замовлення') {
           const chatId = msg.chat.id;
-          // переписати функції запису даних згідно рядка а не колонки
           if (!([chatId] in customerInfo)) bot.sendMessage(chatId, 'Будь ласка представтеся перед тим як зробити замовлення')
           else {
-            await sendToRawContact(customerInfo[chatId].phone, customerInfo[chatId].name, customerInfo[chatId].lotNumber);
-            await sendToRawStatusDone(customerInfo[chatId].lotNumber);
-            const range = `post!A${customerInfo[chatId].lotNumber}:E${customerInfo[chatId].lotNumber}`;
-            const data = await getSpreadsheetData(spreadsheetId, range);
-            if (data.values && data.values.length > 0) {
-            const message = data.values[0].join('\n');
-            const idToDelete = await googleFindMessageId(customerInfo[chatId].lotNumber)
-            await changeMessage(idToDelete, message);
+            await writeGoogle(`${dataBot.googleSheetName}!${dataBot.statusColumn}${customerInfo[chatId].lotNumber}`, [['done']]);
+            await writeGoogle(`${dataBot.googleSheetName}!${dataBot.user.nameColumn}${customerInfo[chatId].lotNumber}`, [[customerInfo[chatId].name]]);
+            await writeGoogle(`${dataBot.googleSheetName}!${dataBot.user.phoneColumn}${customerInfo[chatId].lotNumber}`, [[customerInfo[chatId].phone]]);
+            const message_id = await (await readGoogle(`${dataBot.googleSheetName}!${dataBot.content.message_idColumn}${customerInfo[chatId].lotNumber}`))[0];
+            const oldMessage = await readGoogle(`${dataBot.googleSheetName}!${dataBot.content.startColumn}${customerInfo[chatId].lotNumber}:${dataBot.content.endColumn}${selectedOrderRaw}`);
+            const oldMessageString = oldMessage.join('\n');
+            const newMessage = "📌 " + oldMessageString;
+            try {
+              await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id});
+            } catch (error) {
+              console.log(error)
             }
             bot.sendMessage(chatId, `Замовлення успішно оформлено. Дякую ${customerInfo[chatId].name}`);
           } 
