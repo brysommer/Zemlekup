@@ -20,7 +20,8 @@ const readGoogle = async (range) => {
     const client = await getClient();
     const sheets = getSheetsInstance(client);
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-    return response.data.values[0];
+    if (response.data.values) return response.data.values[0];
+    return response.data;
 };
 
 export { writeGoogle, readGoogle }
