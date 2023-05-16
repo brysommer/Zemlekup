@@ -20,7 +20,7 @@ export const writeSpreadsheetData = async (spreadsheetId, range, data) => {
   const response = await sheets.spreadsheets.values.update(request);
   return response.data;
 };
-//ВИКОРИСТОВУЄТЬСЯ!!!!
+//ВИКОРИСТОВУЄТЬСЯ!!!!//
 const sendToBaseMessageId = async (id, rowNumber) => {
   if (rowNumber) {
     await writeSpreadsheetData(spreadsheetId, `${sheetName}!${dataBot.content.message_idColumn}${rowNumber}`, [[id]]);
