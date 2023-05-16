@@ -72,9 +72,7 @@ export const anketaListiner = async() => {
               if (message_id) {
                 try {
                   await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id});
-                } catch (error) {
-                  
-                }
+                } catch (error) {}
               } 
             };
             editingMessage();
