@@ -3,7 +3,7 @@ import { sendNewRowsToTelegram } from './crawler.js';
 import { dataBot, ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
 import { checkStatus } from './interval.js';
-import { phrases, keyboards } from './language_ua.js'
+import { phrases, keyboards } from './language_ua.js';
 
 let customerPhone;
 let customerName;
