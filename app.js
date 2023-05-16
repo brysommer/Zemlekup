@@ -1,8 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { sendToBaseMessageId } from './writegoog.js'
 import { getSpreadsheetData } from "./filedata.js";
 import { anketaListiner } from './anketa.js';
-import { dataBot } from './values.js';
+import { dataBot, ranges } from './values.js';
+import { writeGoogle } from './crud.js';
 
 const bot = new TelegramBot(dataBot.telegramBotToken, { polling: true });
 export default bot;
@@ -23,7 +23,7 @@ bot.on('message', async (message) => {
           url: dataBot.botUrl,
         }]] };
         const sentMessage = await bot.sendMessage(dataBot.channelId, message, { reply_markup: keyboard });
-        await sendToBaseMessageId(sentMessage.message_id, rowNumber);
+        await writeGoogle(ranges.message_idCell(rowNumber), [[sentMessage.message_id]]);
       }
     } catch (error) {
       console.error(error);
