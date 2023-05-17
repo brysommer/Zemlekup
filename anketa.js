@@ -1,15 +1,14 @@
 import bot from "./app.js";
-import { sendNewRowsToTelegram } from './crawler.js';
 import { dataBot, ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
 import { checkStatus } from './interval.js';
 import { phrases, keyboards } from './language_ua.js';
+import { sendAvaliableToChat } from './postingLot.js';
 
 let customerPhone;
 let customerName;
 let customerInfo = {};
 let selectedOrderRaw;
-const spreadsheetId = dataBot.googleSheetId;
 const phoneRegex = /^\d{10,12}$/;
 
 export const anketaListiner = async() => {
@@ -17,14 +16,6 @@ export const anketaListiner = async() => {
       {command: '/start', description: 'Почати'},
       {command: '/list', description: 'Показати доступні лоти'},
     ]);
-
-    bot.onText(/\/start/ , (msg) => {
-        customerPhone = undefined;
-        customerName = undefined;
-        bot.sendMessage(msg.chat.id, phrases.greetings, {
-            reply_markup: { keyboard: keyboards.startingKeyboard, resize_keyboard: true, one_time_keyboard: true }
-        });
-    });
 
     bot.on("callback_query", async (query) => {
       selectedOrderRaw = query.data;
@@ -39,15 +30,10 @@ export const anketaListiner = async() => {
           { reply_markup: { keyboard: keyboards.contactRequest, resize_keyboard: true }});
       } else bot.sendMessage(chatId, phrases.aleadySold);
     })
-
-    bot.onText(/\/list/ , async (msg) => {
-      await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.statusColumn, msg.chat.id, bot);     
-    });
     
     bot.on('message', async (msg) => {
       const chatId = msg.chat.id;
-      if (msg.text === 'Зробити замовлення') await sendNewRowsToTelegram(spreadsheetId, dataBot.googleSheetName, dataBot.statusColumn, chatId, bot);
-      else if (msg.contact) {
+      if (msg.contact) {
         if (!customerInfo[chatId]) {
           customerInfo[chatId] = {};
         }
@@ -57,8 +43,42 @@ export const anketaListiner = async() => {
         customerName = msg.contact.first_name;
         bot.sendMessage(chatId, phrases.dataConfirmation(customerInfo[chatId].phone, customerInfo[chatId].name), { 
           reply_markup: { keyboard: keyboards.dataConfirmation, resize_keyboard: true, one_time_keyboard: true }});
-      } else if(msg.text === 'Так, Оформити замовлення') {
-          const chatId = msg.chat.id;
+      } else if (phoneRegex.test(msg.text)) {
+        customerInfo[chatId].phone = msg.text;
+        customerPhone = msg.text;
+        bot.sendMessage(chatId, phrases.nameRequest);
+      } else if ((customerPhone && customerName == undefined)) {
+        if (msg.text.length >= 2) {
+          customerName = msg.text;
+          customerInfo[chatId].name = msg.text;
+          bot.sendMessage(chatId, phrases.dataConfirmation(customerInfo[chatId].phone, customerInfo[chatId].name), {
+            reply_markup: { keyboard: keyboards.dataConfirmation, resize_keyboard: true, one_time_keyboard: true },
+          });
+        };  
+      }
+
+      switch (msg.text) {
+        case '/start':
+        case 'Почати спочатку':
+          customerPhone = undefined;
+          customerName = undefined;
+          bot.sendMessage(msg.chat.id, phrases.greetings, {
+              reply_markup: { keyboard: keyboards.startingKeyboard, resize_keyboard: true, one_time_keyboard: true }
+          });
+          break;
+        case 'Зробити замовлення':
+        case '/list':
+          await sendAvaliableToChat(msg.chat.id, bot);
+          break;
+        case `Ні, я введу номер вручну`:
+        case 'Ні, повторити введення':
+          customerPhone = undefined;
+          customerName = undefined;  
+          bot.sendMessage(chatId, phrases.phoneRules, {
+            reply_markup: { keyboard: keyboards.enterPhone, resize_keyboard: true },
+          });
+          break;     
+        case 'Так, Оформити замовлення':
           if (!([chatId] in customerInfo)) bot.sendMessage(chatId, phrases.noContacts);
           else {
             await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['done']]);
@@ -78,26 +98,7 @@ export const anketaListiner = async() => {
             editingMessage();
             bot.sendMessage(chatId, phrases.thanksForOrder(customerInfo[chatId].name));
           } 
-      } else if (msg.text === 'Почати спочатку') {
-        bot.sendMessage(chatId, '/start');
-      } else if(msg.text === `Ні, я введу номер вручну` || msg.text === 'Ні, повторити введення') {
-        customerPhone = undefined;
-        customerName = undefined;  
-        bot.sendMessage(chatId, phrases.phoneRules, {
-          reply_markup: { keyboard: keyboards.enterPhone, resize_keyboard: true },
-        });
-      } else if (phoneRegex.test(msg.text)) {
-        customerInfo[chatId].phone = msg.text;
-        customerPhone = msg.text;
-        bot.sendMessage(chatId, phrases.nameRequest);
-      } else if (customerPhone && customerName == undefined ) {
-        if (msg.text.length >= 2) {
-        customerName = msg.text;
-        customerInfo[chatId].name = msg.text;
-        bot.sendMessage(chatId, phrases.dataConfirmation(customerInfo[chatId].phone, customerInfo[chatId].name), {
-          reply_markup: { keyboard: keyboards.dataConfirmation, resize_keyboard: true, one_time_keyboard: true },
-        });
-        };
+          break;
       };
   });
 };
