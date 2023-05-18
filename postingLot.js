@@ -1,9 +1,9 @@
-import bot from "./app.js";
+import { bot, admin } from "./app.js";
 import { writeGoogle, readGoogle } from './crud.js';
 import { dataBot, ranges } from './values.js';
 
 const postingLots = () => {
-    bot.on('message', async (message) => {
+  admin.on('message', async (message) => {
         if (message.text < 9999999 && message.text != 1) {
           try {
             const rowNumber = parseInt(message.text);

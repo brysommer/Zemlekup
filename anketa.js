@@ -1,4 +1,4 @@
-import bot from "./app.js";
+import { bot } from "./app.js";
 import { dataBot, ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
 import { checkStatus } from './interval.js';

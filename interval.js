@@ -1,6 +1,6 @@
 import { readGoogle, writeGoogle } from './crud.js';
 import { dataBot, ranges } from './values.js';
-import bot from "./app.js";
+import { bot } from "./app.js";
 import { logger } from './logger/index.js';
 
 // 🗽🌞

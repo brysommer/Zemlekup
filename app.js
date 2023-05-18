@@ -4,7 +4,8 @@ import { dataBot } from './values.js';
 import { postingLots } from './postingLot.js';
 
 const bot = new TelegramBot(dataBot.telegramBotToken, { polling: true });
-export default bot;
+const admin = new TelegramBot(dataBot.adminBot, { polling: true });
+export { bot, admin };
 
 anketaListiner();
 postingLots();
