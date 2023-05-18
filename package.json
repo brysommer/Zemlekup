@@ -13,6 +13,7 @@
   "dependencies": {
     "google-auth-library": "^8.7.0",
     "googleapis": "^114.0.0",
+    "luxon": "^3.3.0",
     "node-telegram-bot-api": "^0.61.0"
   }
 }

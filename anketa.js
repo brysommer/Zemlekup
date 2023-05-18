@@ -4,11 +4,11 @@ import { writeGoogle, readGoogle } from './crud.js';
 import { checkStatus } from './interval.js';
 import { phrases, keyboards } from './language_ua.js';
 import { sendAvaliableToChat } from './postingLot.js';
+import { logger } from './logger/index.js';
 
 let customerPhone;
 let customerName;
 let customerInfo = {};
-let selectedOrderRaw;
 const phoneRegex = /^\d{10,12}$/;
 
 export const anketaListiner = async() => {
@@ -18,14 +18,19 @@ export const anketaListiner = async() => {
     ]);
 
     bot.on("callback_query", async (query) => {
-      selectedOrderRaw = query.data;
+      let selectedLot = query.data;
       const chatId = query.message.chat.id;
       customerInfo[chatId] = { lotNumber : query.data, phone: undefined, name: undefined };
       const choosenLotStatus = await readGoogle(ranges.statusCell(customerInfo[chatId].lotNumber));
       if (choosenLotStatus[0] === 'new') {
-        await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['reserve']]);
-        checkStatus(selectedOrderRaw, chatId);
-        await writeGoogle(ranges.user_idCell(customerInfo[chatId].lotNumber), [[`${chatId}`]]);
+        try {
+          await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['reserve']]);
+          await writeGoogle(ranges.user_idCell(customerInfo[chatId].lotNumber), [[`${chatId}`]]);
+          logger.info(`USER_ID: ${chatId} reserved lot#${selectedLot}`);
+        } catch (error) {
+          logger.error(`Impossible reserve lot#${selectedLot}. Error: ${err}`);
+        }
+        checkStatus(selectedLot, chatId);
         bot.sendMessage(chatId, phrases.contactRequest,
           { reply_markup: { keyboard: keyboards.contactRequest, resize_keyboard: true }});
       } else bot.sendMessage(chatId, phrases.aleadySold);
@@ -81,22 +86,27 @@ export const anketaListiner = async() => {
         case 'Так, Оформити замовлення':
           if (!([chatId] in customerInfo)) bot.sendMessage(chatId, phrases.noContacts);
           else {
-            await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['done']]);
-            await writeGoogle(ranges.userNameCell(customerInfo[chatId].lotNumber), [[customerInfo[chatId].name]]);
-            await writeGoogle(ranges.userPhoneCell(customerInfo[chatId].lotNumber), [[customerInfo[chatId].phone]]);
-            const editingMessage = async () => {
-              const message_id = await (await readGoogle(ranges.message_idCell(customerInfo[chatId].lotNumber)))[0];
-              const oldMessage = await readGoogle(ranges.postContentLine(customerInfo[chatId].lotNumber));
-              const oldMessageString = oldMessage.join('\n');
-              const newMessage = "📌 " + oldMessageString;
-              if (message_id) {
-                try {
-                  await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id});
-                } catch (error) {}
-              } 
-            };
-            editingMessage();
-            bot.sendMessage(chatId, phrases.thanksForOrder(customerInfo[chatId].name));
+            try {
+              await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['done']]);
+              await writeGoogle(ranges.userNameCell(customerInfo[chatId].lotNumber), [[customerInfo[chatId].name]]);
+              await writeGoogle(ranges.userPhoneCell(customerInfo[chatId].lotNumber), [[customerInfo[chatId].phone]]);
+              const editingMessage = async () => {
+                const message_id = await (await readGoogle(ranges.message_idCell(customerInfo[chatId].lotNumber)))[0];
+                const oldMessage = await readGoogle(ranges.postContentLine(customerInfo[chatId].lotNumber));
+                const oldMessageString = oldMessage.join('\n');
+                const newMessage = "📌 " + oldMessageString;
+                if (message_id) {
+                  try {
+                    await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id});
+                  } catch (error) {}
+                } 
+              };
+              await editingMessage();
+              await bot.sendMessage(chatId, phrases.thanksForOrder(customerInfo[chatId].name)); 
+              logger.warn(`USER_ID: ${chatId} comleate order`); 
+            } catch (error) {
+              logger.error(`Something went wrong on finishing order for lot#${customerInfo[chatId].lotNumber} from customer ${chatId}. Error: ${error}`);
+            }
           } 
           break;
       };

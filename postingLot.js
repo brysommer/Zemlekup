@@ -33,7 +33,6 @@ const sendAvaliableToChat = async (chatId, bot) => {
     .filter(value => value !== null);
   const contentPromises = newRows.map(rowNumber => readGoogle(ranges.postContentLine(rowNumber)));
   const rowDataArray = await Promise.all(contentPromises);
-  console.log(rowDataArray);
   rowDataArray.forEach((element, index) => {
       const rowNumber = newRows[index];
       const rowText = `\u{1F4CA} ${element[0]} \n ${element[1]} \n ${element[2]} \n ${element[3]} \n \u{1F69C} ${element[4]}`;; // Adds a smiley emoji
