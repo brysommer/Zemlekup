@@ -1,31 +1,47 @@
 import { readGoogle, writeGoogle } from './crud.js';
-import { dataBot } from './values.js';
-import bot from "./app.js";
+import { dataBot, ranges } from './values.js';
+import { bot } from "./app.js";
+import { logger } from './logger/index.js';
 
+// 🗽🌞
 const checkStatus = (rowNumber, chat_id) => {
-    const statusRange = `${dataBot.googleSheetName}!${dataBot.statusColumn}${rowNumber}`;
     setTimeout(async () => {
-        const response = await readGoogle(statusRange);
+        const response = await readGoogle(ranges.statusCell(rowNumber));
         const data = response[0];
         if (data === 'reserve') {
-            bot.sendMessage(chat_id, 'Ви забронювали ділянку, завершіть замовлення. Незабаром ділянка стане доступною для покупки іншим користувачам');
+            try {
+                await bot.sendMessage(chat_id, 'Ви забронювали ділянку, завершіть замовлення. Незабаром ділянка стане доступною для покупки іншим користувачам');
+                logger.info(`USER_ID: ${chat_id} received first reminder 🎃 about lot#${rowNumber}`);
+            } catch (error) {
+                logger.error(`Impossible to send remind about lot#${rowNumber}. Error: ${err}`);
+            }
             setTimeout(async () => {
-                const response = await readGoogle(statusRange);
+                const response = await readGoogle(ranges.statusCell(rowNumber));
                 const data = response[0];
                 if (data === 'reserve') {
                     bot.sendMessage(chat_id, 'Ділянка яку ви бронювали доступна для покупки');
-                    writeGoogle(statusRange, [['new']]);
+                    try {
+                        await writeGoogle(ranges.statusCell(rowNumber), [['new']]);
+                        logger.info(`USER_ID: ${chat_id} received second reminder about lot#${rowNumber}. Lot#${rowNumber} avaliable for selling again ⛵`);
+                    } catch (error) {
+                        logger.error(`Impossible to send remind about lot#${rowNumber}. Error: ${err}`);
+                    }
                     setTimeout(async () => {
-                        const response = await readGoogle(statusRange);
+                        const response = await readGoogle(ranges.statusCell(rowNumber));
                         const data = response[0];
                         if (data === 'new') {
-                            bot.sendMessage(chat_id, 'Ділянка якою ви цікавились ще не продана');
+                            try {
+                                await bot.sendMessage(chat_id, 'Ділянка якою ви цікавились ще не продана');
+                                logger.info(`USER_ID: ${chat_id} received LAST CHANCE 🚸 remind about lot#${rowNumber}`);
+                            } catch (error) {
+                                logger.error(`Impossible to send remind about lot#${rowNumber}. Error: ${err}`);
+                            }
                         } return false;
-                    }, 15000);
+                    }, dataBot.lastChanceFirst);
                 } return false;
-            }, 15000);
+            }, dataBot.secondReminder);
         } return false;
-    }, 15000);
+    }, dataBot.firstReminder);
 } 
 
 export { checkStatus };
