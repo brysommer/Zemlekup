@@ -44,4 +44,17 @@ const checkStatus = (rowNumber, chat_id) => {
     }, dataBot.firstReminder);
 } 
 
-export { checkStatus };
+
+const editingMessage = async (lotNumber) => {
+    const message_id = await (await readGoogle(ranges.message_idCell(lotNumber)))[0];
+    const oldMessage = await readGoogle(ranges.postContentLine(lotNumber));
+    const oldMessageString = oldMessage.join('\n');
+    const newMessage = "📌 " + oldMessageString;
+    try {
+        await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id});
+    } catch (error) {
+        logger.warn(`Can't edit. Message ID: ${message_id}. Reason: ${error}`);
+    }
+  } 
+
+export { checkStatus, editingMessage };

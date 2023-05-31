@@ -11,7 +11,7 @@ const phrases = {
     noContacts: 'Будь ласка представтеся перед тим як зробити замовлення',
     wrongName: 'Невірне ім\'я. Будь ласка, введіть своє справжнє ім\'я:',
     wrongPhone: 'Невірний номер телефону. Будь ласка, введіть номер телефону ще раз:',
-    phoneRules: 'Введіть ваш номер телефону без +. Лише цифри. І відправте повідомлення',
+    phoneRules: 'Введіть, будь ласка, номер телефону. Або інші контактні дані',
     nameRequest: 'Введіть своє ім\'я:',
   };
   
@@ -27,7 +27,22 @@ const keyboards = {
       ['Ні, повторити введення'],
       ['/start'],
     ],
-    enterPhone: [ ['/start'] ]
+    enterPhone: [ ['/start'] ],
+    contactRequestInline: { inline_keyboard: [
+      [{ text: 'Так', callback_data: '/autocontact' }],
+      [{ text: 'Ні, я введу контакти самостійно', callback_data: '/manualcontact' }],
+      [{ text: 'Почати спочатку', callback_data: '/start' }]
+    ]},
+    listInline: { inline_keyboard: [
+      [{ text: 'Зробити замовлення', callback_data: `/list` }]
+    ]},
+    inlineConfirmation: {
+      inline_keyboard: [
+        [{ text: 'Так, Оформити замовлення', callback_data: '/comleate' }],
+        [{ text: 'Ні, повторити введення', callback_data: '/manualcontact'},],
+        [{ text: 'Почати спочатку', callback_data: '/start' }]
+      ]  
+    }
 };
 
 export { phrases, keyboards }
