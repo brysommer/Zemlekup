@@ -7,10 +7,13 @@ import { logger } from './logger/index.js';
 const checkStatus = (rowNumber, chat_id) => {
     setTimeout(async () => {
         const response = await readGoogle(ranges.statusCell(rowNumber));
+        const content = await readGoogle(ranges.postContentLine(rowNumber));
+        const message = `\u{1F4CA} ${content[0]} \n ${content[1]} \n ${content[2]} \n ${content[3]} \n \u{1F69C} ${content[4]}`;
         const data = response[0];
         if (data === 'reserve') {
             try {
                 await bot.sendMessage(chat_id, 'Ви забронювали ділянку, завершіть замовлення. Незабаром ділянка стане доступною для покупки іншим користувачам');
+                await bot.sendMessage(chat_id, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${rowNumber}` }]] } });
                 logger.info(`USER_ID: ${chat_id} received first reminder 🎃 about lot#${rowNumber}`);
             } catch (error) {
                 logger.error(`Impossible to send remind about lot#${rowNumber}. Error: ${err}`);
@@ -22,6 +25,7 @@ const checkStatus = (rowNumber, chat_id) => {
                     bot.sendMessage(chat_id, 'Ділянка яку ви бронювали доступна для покупки');
                     try {
                         await writeGoogle(ranges.statusCell(rowNumber), [['new']]);
+                        await bot.sendMessage(chat_id, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${rowNumber}` }]] } });
                         logger.info(`USER_ID: ${chat_id} received second reminder about lot#${rowNumber}. Lot#${rowNumber} avaliable for selling again ⛵`);
                     } catch (error) {
                         logger.error(`Impossible to send remind about lot#${rowNumber}. Error: ${err}`);
@@ -32,6 +36,7 @@ const checkStatus = (rowNumber, chat_id) => {
                         if (data === 'new') {
                             try {
                                 await bot.sendMessage(chat_id, 'Ділянка якою ви цікавились ще не продана');
+                                await bot.sendMessage(chat_id, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${rowNumber}` }]] } });
                                 logger.info(`USER_ID: ${chat_id} received LAST CHANCE 🚸 remind about lot#${rowNumber}`);
                             } catch (error) {
                                 logger.error(`Impossible to send remind about lot#${rowNumber}. Error: ${err}`);
