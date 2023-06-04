@@ -1,3 +1,5 @@
+import { dataBot } from './values.js'
+
 const phrases = {
     greetings: 'Привіт, якщо ви хочете зробити замовлення, натисніть кнопку "Зробити замовлення".',
     contactRequest: 'Нам потрібні ваші контактні дані. Отримати з контактних даних телеграм?',
@@ -42,7 +44,12 @@ const keyboards = {
         [{ text: 'Ні, повторити введення', callback_data: '/manualcontact'},],
         [{ text: 'Почати спочатку', callback_data: '/start' }]
       ]  
-    }
+    },
+    channelKeyboard : { inline_keyboard: [[{ 
+      text: 'Скористайтеся ботом, щоб зробити замовлення',
+      url: dataBot.botUrl,
+    }]] },
+
 };
 
 export { phrases, keyboards }
