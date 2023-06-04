@@ -5,7 +5,7 @@ const phrases = {
         return `Ваш номер телефону: ${customerPhone}. Ваше імя ${customerName}. Дані вірні?`;
     },
     thanksForOrder: (customerName) => {
-        return `Замовлення успішно оформлено. Дякую ${customerName}`;
+        return `Вітаю з успіщною покупкою. ${customerName} Ви купили:`;
     },
     aleadySold: 'Є замовлення від іншого користувача',
     noContacts: 'Будь ласка представтеся перед тим як зробити замовлення',

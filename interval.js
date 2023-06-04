@@ -3,12 +3,18 @@ import { dataBot, ranges } from './values.js';
 import { bot } from "./app.js";
 import { logger } from './logger/index.js';
 
+
+export const getLotContentByID = async (lotNumber) => {
+    const content = await readGoogle(ranges.postContentLine(lotNumber));
+    const message = `\u{1F4CA} ${content[0]} \n ${content[1]} \n ${content[2]} \n ${content[3]} \n \u{1F69C} ${content[4]}`;
+    return message;
+}
+
 // 🗽🌞
 const checkStatus = (rowNumber, chat_id) => {
     setTimeout(async () => {
         const response = await readGoogle(ranges.statusCell(rowNumber));
-        const content = await readGoogle(ranges.postContentLine(rowNumber));
-        const message = `\u{1F4CA} ${content[0]} \n ${content[1]} \n ${content[2]} \n ${content[3]} \n \u{1F69C} ${content[4]}`;
+        const message = await getLotContentByID(rowNumber);
         const data = response[0];
         if (data === 'reserve') {
             try {
