@@ -1,7 +1,7 @@
 import { bot } from "./app.js";
 import { ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
-import { checkStatus, editingMessage } from './interval.js';
+import { checkStatus, editingMessage, getLotContentByID } from './interval.js';
 import { phrases, keyboards } from './language_ua.js';
 import { sendAvaliableToChat } from './postingLot.js';
 import { logger } from './logger/index.js';
@@ -70,7 +70,9 @@ export const anketaListiner = async() => {
                 await writeGoogle(ranges.userNameCell(customerInfo[chatId].lotNumber), [[customerInfo[chatId].name]]);
                 await writeGoogle(ranges.userPhoneCell(customerInfo[chatId].lotNumber), [[customerInfo[chatId].phone]]);
                 await editingMessage(customerInfo[chatId].lotNumber);
-                await bot.sendMessage(chatId, phrases.thanksForOrder(customerInfo[chatId].name)); 
+                const soldLotContent = await getLotContentByID(customerInfo[chatId].lotNumber);
+                await bot.sendMessage(chatId, phrases.thanksForOrder(customerInfo[chatId].name));
+                await bot.sendMessage(chatId, soldLotContent); 
                 logger.warn(`USER_ID: ${chatId} comleate order`); 
               } catch (error) {
                 logger.error(`Something went wrong on finishing order for lot#${customerInfo[chatId].lotNumber} from customer ${chatId}. Error: ${error}`);
