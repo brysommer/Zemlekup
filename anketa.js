@@ -1,9 +1,9 @@
 import { bot } from "./app.js";
-import { ranges } from './values.js';
+import { dataBot, ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
 import { checkStatus, editingMessage, getLotContentByID } from './interval.js';
 import { phrases, keyboards } from './language_ua.js';
-import { sendAvaliableToChat } from './postingLot.js';
+import { sendAvaliableToChat, filterKeyboard, sendFiltredToChat } from './postingLot.js';
 import { logger } from './logger/index.js';
 
 let customerInfo = {};
@@ -28,6 +28,36 @@ export const anketaListiner = async() => {
       const chatId = query.message.chat.id;
       checkAndAssignChatStatus(customerInfo, chatId); 
 
+      const checkRegex = (string) => {
+        const regex = /state\p{L}+/gu;
+        return regex.test(string);
+      }
+
+      if(!isNaN(Number(action))) {
+        let selectedLot = query.data;
+        customerInfo[chatId] = { lotNumber : query.data, phone: undefined, name: undefined };
+        const choosenLotStatus = await readGoogle(ranges.statusCell(customerInfo[chatId].lotNumber));
+        if (choosenLotStatus[0] === 'new') {
+          try {
+            await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['reserve']]);
+            logger.info(`USER_ID: ${chatId} reserved lot#${selectedLot}`);
+            customerInfo[chatId].chatStatus = '';
+          } catch (error) {
+            logger.warn(`Impossible reserve lot#${selectedLot}. Error: ${err}`);
+          }
+          try {
+            await writeGoogle(ranges.user_idCell(customerInfo[chatId].lotNumber), [[`${chatId}`]]);
+          } catch (error) {
+            logger.warn(`Impossible to write chatId#${chatId} to sheet. Error: ${err}`);
+          }
+          checkStatus(selectedLot, chatId);
+          const message = await bot.sendMessage(chatId, phrases.contactRequest, { reply_markup: keyboards.contactRequestInline });
+          customerInfo[chatId].recentMessage = message.message_id;
+        } else bot.sendMessage(chatId, phrases.aleadySold);
+      } else if(checkRegex(action)) {
+        await sendFiltredToChat(chatId, action, ranges.stateColumn);
+        
+      }
       switch (action) {
         case '/start':
           bot.deleteMessage(chatId, customerInfo[chatId].recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
@@ -82,28 +112,6 @@ export const anketaListiner = async() => {
             }
           } 
           break;
-        default: 
-          let selectedLot = query.data;
-          customerInfo[chatId] = { lotNumber : query.data, phone: undefined, name: undefined };
-          const choosenLotStatus = await readGoogle(ranges.statusCell(customerInfo[chatId].lotNumber));
-          if (choosenLotStatus[0] === 'new') {
-            try {
-              await writeGoogle(ranges.statusCell(customerInfo[chatId].lotNumber), [['reserve']]);
-              logger.info(`USER_ID: ${chatId} reserved lot#${selectedLot}`);
-              customerInfo[chatId].chatStatus = '';
-            } catch (error) {
-              logger.warn(`Impossible reserve lot#${selectedLot}. Error: ${err}`);
-            }
-            try {
-              await writeGoogle(ranges.user_idCell(customerInfo[chatId].lotNumber), [[`${chatId}`]]);
-            } catch (error) {
-              logger.warn(`Impossible to write chatId#${chatId} to sheet. Error: ${err}`);
-            }
-            checkStatus(selectedLot, chatId);
-            const message = await bot.sendMessage(chatId, phrases.contactRequest, { reply_markup: keyboards.contactRequestInline });
-            customerInfo[chatId].recentMessage = message.message_id;
-          } else bot.sendMessage(chatId, phrases.aleadySold);
-        break;
       }
     })
     
@@ -136,6 +144,9 @@ export const anketaListiner = async() => {
 
 
       switch (msg.text) {
+        case '/filter': 
+          filterKeyboard(chatId, 'Область', ranges.stateColumn);
+          break;
         case '/start':
           customerInfo[chatId].phone = undefined;
           customerInfo[chatId].name = undefined;
