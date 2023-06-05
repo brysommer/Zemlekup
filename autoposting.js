@@ -1,1 +1,0 @@
-import { readGoogle } from './crud';

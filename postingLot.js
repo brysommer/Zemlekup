@@ -3,7 +3,37 @@ import { writeGoogle, readGoogle } from './crud.js';
 import { dataBot, ranges } from './values.js';
 import { getLotContentByID } from './interval.js';
 import { logger } from './logger/index.js';
-import { keyboards } from './language_ua.js'
+import { keyboards } from './language_ua.js';
+
+const filterKeyboard = async (chatId, filterName, range) => {
+  const stateValues = await readGoogle(range);
+  const statesList = stateValues
+  .slice(1)
+  .filter((value, index, self) => value !== undefined && self.indexOf(value) === index)
+  .sort((a, b) => {
+    const countA = stateValues.filter(value => value === a).length;
+    const countB = stateValues.filter(value => value === b).length;
+    return countB - countA;
+  });
+
+  const result = [];
+  const chunkSize = 3; 
+
+  for (let i = 0; i < statesList.length; i += chunkSize) {
+    const chunk = statesList.slice(i, i + chunkSize);
+    const row = chunk.map(state => ({
+      text: state,
+      callback_data: `state${state}`
+    }));
+    result.push(row);
+  };
+
+  bot.sendMessage(chatId, `Виберіть ${filterName}`, { reply_markup: { inline_keyboard: result } });
+
+  console.log(result);  
+}
+
+
 
 const autoPosting = async () => {
   const statusValues = await readGoogle(ranges.statusColumn);
@@ -71,4 +101,27 @@ const sendAvaliableToChat = async (chatId, bot) => {
   });
 };
 
-export { postingLots, sendAvaliableToChat, autoPosting }
+const sendFiltredToChat = async (chatId, callback_data, searchRange) => {
+  const cuttingCallbackData= (cuttedWord) => {
+    const regex = /state(.+)/i;
+    const match = cuttedWord.match(regex);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    return null;
+  };
+  
+  const searchWord = cuttingCallbackData(callback_data);
+  const readedValues = await readGoogle(searchRange);
+  const matchedLots = readedValues
+  .map((value, index) => value === searchWord ? index + 1 : null)
+  .filter(value => value !== null);
+  const contentPromises = matchedLots.map(el => getLotContentByID(el));
+  const lotsContent = await Promise.all(contentPromises);
+  lotsContent.forEach((element, index) => {
+    const rowNumber = matchedLots[index];
+    bot.sendMessage(chatId, element, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${rowNumber}` }]] } });
+  });
+}
+
+export { postingLots, sendAvaliableToChat, autoPosting, filterKeyboard, sendFiltredToChat }
