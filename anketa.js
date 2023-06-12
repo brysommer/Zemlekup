@@ -17,7 +17,7 @@ export const anketaListiner = async() => {
     bot.setMyCommands([
       {command: '/start', description: 'Почати'},
       {command: '/list', description: 'Показати усі доступні лоти'},
-      {command: '/filter', description: 'Відфільтрувати лоти по областям'},
+      {command: '/filter', description: 'Фільтрувати ділянки за областями'},
     ]);
 
     bot.on("callback_query", async (query) => {
