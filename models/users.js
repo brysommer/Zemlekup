@@ -156,6 +156,12 @@ const findUsersByStatus = async (isAuthenticated) => {
     return;
 };
 
+const findALLUsers = async () => {
+    const res = await User.findAll({ where: {  } });
+    if (res.length > 0) return res.map(el => el.dataValues);
+    return;
+};
+
 const findUserByChatId = async (chat_id) => {
     const res = await User.findOne({ where: { chat_id: chat_id } });
     if (res) return res.dataValues;
@@ -181,5 +187,6 @@ export {
     updateChatStatusByChatId,
     updateRecentMessageByChatId,
     userIsBanUpdate,
-    deleteUserByChatId
+    deleteUserByChatId,
+    findALLUsers
 };   

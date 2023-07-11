@@ -23,7 +23,6 @@ const main = async () => {
         return dbInterface.tableExists(configTable);
     }));
     const result = checks.every(el => el === true);
-    console.log(result)
     if (!result) {
         // eslint-disable-next-line no-console
         console.error(`🚩 Failed to check DB tables`);

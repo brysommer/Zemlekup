@@ -52,7 +52,7 @@ export const anketaListiner = async() => {
           }
           checkStatus(selectedLot, chatId);
           await updateUserByChatId(chatId, { lotNumber: selectedLot });
-          if (userInfo.isAuthenticated) {
+          if (userInfo?.isAuthenticated) {
             const message = await bot.sendMessage(chatId, `Раді вас знову бачити ${userInfo.firstname}`, { reply_markup: keyboards.finishOrder });
             await updateRecentMessageByChatId(chatId, message.message_id);  
           } else {
@@ -65,7 +65,7 @@ export const anketaListiner = async() => {
       }
       switch (action) {
         case '/start':
-          bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+          bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
           const message3 = bot.sendMessage(chatId, phrases.greetings, { reply_markup: keyboards.listInline });
           await updateRecentMessageByChatId(chatId, message3.message_id);
           break;
@@ -73,11 +73,11 @@ export const anketaListiner = async() => {
           await filterKeyboard(chatId, 'Область', ranges.stateColumn);
           break;
         case '/list':
-          bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+          bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
           await sendAvaliableToChat(chatId, bot);
           break;
         case '/autocontact':
-          bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+          bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
           const message = await bot.sendMessage(chatId, `Для користувачів Telegram WEB` , {
             reply_markup: { inline_keyboard: [[{ text: 'Ввести контакти', callback_data: '/manualcontact' }]] },
           });
@@ -85,7 +85,7 @@ export const anketaListiner = async() => {
           await updateRecentMessageByChatId(chatId, message.message_id);
           break;
         case  '/manualcontact':
-          bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+          bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
           await updateChatStatusByChatId(chatId, 'phoneManual')
           const message1 = await bot.sendMessage(chatId, phrases.phoneRules, {
             reply_markup: { inline_keyboard: [[{ text: 'Почати спочатку', callback_data: '/start' }]] },
@@ -93,7 +93,7 @@ export const anketaListiner = async() => {
           await updateRecentMessageByChatId(chatId, message1.message_id);
           break;
         case '/comleate':
-          bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+          bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
           const status = await readGoogle(ranges.statusCell(userInfo.lotNumber));
           if (status[0] === 'reserve') {
             try {
@@ -111,7 +111,7 @@ export const anketaListiner = async() => {
                 lotNumber: null,
               }) 
             } catch (error) {
-              logger.error(`Something went wrong on finishing order for lot#${userInfo.lotNumber} from customer ${chatId}. Error: ${error}`);
+              logger.error(`Something went wrong on finishing order for lot#${userInfo?.lotNumber} from customer ${chatId}. Error: ${error}`);
             }
           } else {
             bot.sendMessage(chatId, phrases.aleadySold);

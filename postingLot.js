@@ -4,13 +4,12 @@ import { dataBot, ranges } from './values.js';
 import { getLotContentByID } from './interval.js';
 import { logger } from './logger/index.js';
 import { keyboards } from './language_ua.js';
-import { findUsersByStatus, userIsBanUpdate, findUserByChatId, deleteUserByChatId } from './models/users.js';
+import { findUsersByStatus, findALLUsers, userIsBanUpdate, findUserByChatId, deleteUserByChatId } from './models/users.js';
 
 const filterKeyboard = async (chatId, filterName, range) => {
   const stateValues = await readGoogle(range);
   const lotsStatus = await readGoogle(ranges.statusColumn);
   const lotsStatusData = lotsStatus.slice(1)
-  console.log(lotsStatusData);
   
   const statesList = stateValues
   .slice(1)
@@ -20,7 +19,6 @@ const filterKeyboard = async (chatId, filterName, range) => {
     const countB = stateValues.filter(value => value === b).length;
     return countB - countA;
   });
-  console.log(statesList)
   const result = [];
   const chunkSize = 3; 
 
@@ -35,7 +33,6 @@ const filterKeyboard = async (chatId, filterName, range) => {
 
   bot.sendMessage(chatId, `Виберіть ${filterName}:`, { reply_markup: { inline_keyboard: result } });
 
-  console.log(result);  
 }
 
 
@@ -162,7 +159,8 @@ const sendFiltredToChat = async (chatId, callback_data, searchRange) => {
 }
 
 const sendLotToRegistredCustomers = async (message, lotNumber) => {
-  const users = await findUsersByStatus(true);
+  const users = await findALLUsers();
+  console.log(users);
   const usersChatId = users.map(el => el.chat_id);
   const reminderPromises = usersChatId.map(el => 
     bot.sendMessage(el, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${lotNumber}` }]] } })
