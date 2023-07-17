@@ -8,17 +8,20 @@ import { findUsersByStatus, findALLUsers, userIsBanUpdate, findUserByChatId, del
 
 const filterKeyboard = async (chatId, filterName, range) => {
   const stateValues = await readGoogle(range);
+  
   const lotsStatus = await readGoogle(ranges.statusColumn);
   const lotsStatusData = lotsStatus.slice(1)
-  
+  console.log(stateValues);
   const statesList = stateValues
   .slice(1)
-  .filter((value, index, self) => lotsStatusData[index] === 'new' && value !== undefined && self.indexOf(value) === index)
+  .filter((value, index) => lotsStatusData[index] === 'new' && value !== undefined)
+  .filter((value, index, self) => self.indexOf(value) === index)
   .sort((a, b) => {
     const countA = stateValues.filter(value => value === a).length;
     const countB = stateValues.filter(value => value === b).length;
     return countB - countA;
   });
+  
   const result = [];
   const chunkSize = 3; 
 
