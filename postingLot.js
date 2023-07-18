@@ -11,7 +11,6 @@ const filterKeyboard = async (chatId, filterName, range) => {
   
   const lotsStatus = await readGoogle(ranges.statusColumn);
   const lotsStatusData = lotsStatus.slice(1)
-  console.log(stateValues);
   const statesList = stateValues
   .slice(1)
   .filter((value, index) => lotsStatusData[index] === 'new' && value !== undefined)

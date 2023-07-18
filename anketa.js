@@ -18,6 +18,7 @@ export const anketaListiner = async() => {
       {command: '/start', description: 'Почати'},
       {command: '/list', description: 'Показати усі доступні лоти'},
       {command: '/filter', description: 'Фільтрувати ділянки за областями'},
+      {command: '/reserved', description: 'Переглянути заброньовані ділянки'}
     ]);
 
     bot.on("callback_query", async (query) => {
@@ -156,6 +157,25 @@ export const anketaListiner = async() => {
       }
 
       switch (msg.text) {
+        case '/reserved': 
+          const lotsStatus = await readGoogle(ranges.statusColumn);
+          const idColumn = await readGoogle(ranges.user_idColumn);
+          const indices = lotsStatus.reduce((acc, status, index) => {
+            if (status === 'reserve' && idColumn[index] == chatId) {
+              acc.push(index);
+            }
+            return acc;
+          }, []);
+          if(indices.length > 0) {
+            await bot.sendMessage(chatId, `Ваші заброньовані ділянки:`);
+            const contentPromises = indices.map(el => getLotContentByID(el));
+            const lotsContent = await Promise.all(contentPromises);  
+            lotsContent.forEach(element => {
+              bot.sendMessage(chatId, element);
+            });
+          } else await bot.sendMessage(chatId, `У вас немає заброньованих ділянок`);
+          
+          break;
         case '/filter': 
           filterKeyboard(chatId, 'Область', ranges.stateColumn);
           break;
