@@ -1,7 +1,7 @@
 import { bot } from "./app.js";
 import { ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
-import { checkStatus, editingMessage, getLotContentByID } from './interval.js';
+import { checkStatus, editingMessage, getLotContentByID, editingMessageReserved } from './interval.js';
 import { phrases, keyboards } from './language_ua.js';
 import { sendAvaliableToChat, filterKeyboard, sendFiltredToChat } from './postingLot.js';
 import { logger } from './logger/index.js';
@@ -41,10 +41,11 @@ export const anketaListiner = async() => {
         if (choosenLotStatus[0] === 'new') {
           try {
             await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]);
+            await editingMessageReserved(selectedLot);
             logger.info(`USER_ID: ${chatId} reserved lot#${selectedLot}`);
             await updateChatStatusByChatId(chatId, '');
           } catch (error) {
-            logger.warn(`Impossible reserve lot#${selectedLot}. Error: ${err}`);
+            logger.warn(`Impossible reserve lot#${selectedLot}. Error: ${error}`);
           }
           try {
             await writeGoogle(ranges.user_idCell(selectedLot), [[`${chatId}`]]);
