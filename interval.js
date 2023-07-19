@@ -2,6 +2,7 @@ import { readGoogle, writeGoogle } from './crud.js';
 import { dataBot, ranges } from './values.js';
 import { bot } from "./app.js";
 import { logger } from './logger/index.js';
+import { keyboards } from './language_ua.js';
 
 
 export const getLotContentByID = async (lotNumber) => {
@@ -75,7 +76,7 @@ const editingMessage = async (lotNumber) => {
     const formattedMessage = `\u{1F4CA} ${content[0]} \n ${content[1]} \n ${content[2]} \n ${content[3]} \n \u{1F69C} ${content[4]}`;
     const newMessage = "Знову доступна 😉 \n " + formattedMessage;
     try {
-        await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id});
+        await bot.editMessageText(newMessage, {chat_id: dataBot.channelId, message_id: message_id, reply_markup: keyboards.channelKeyboard });
     } catch (error) {
         logger.warn(`Can't edit. Message ID: ${message_id}. Reason: ${error}`);
     }
