@@ -163,7 +163,7 @@ export const anketaListiner = async() => {
           const idColumn = await readGoogle(ranges.user_idColumn);
           const indices = lotsStatus.reduce((acc, status, index) => {
             if (status === 'reserve' && idColumn[index] == chatId) {
-              acc.push(index);
+              acc.push(index + 1);
             }
             return acc;
           }, []);
