@@ -166,14 +166,13 @@ const sendLotToRegistredCustomers = async (message, lotNumber) => {
   const groupSize = 25;
   for (let i = 0; i < usersChatId.length; i += groupSize) {
     const chatIdsGroup = usersChatId.slice(i, i + groupSize);
-    const reminderPromises = chatIdsGroup.map(el =>
-      bot.sendMessage(el, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${lotNumber}` }]] } })
-    );
-    try {
-      await Promise.all(reminderPromises);
-    } catch (error) {
-      logger.warn(`Something went wrong on sending notification ${error}`)
-    }
+    chatIdsGroup.forEach(el => {
+      try {
+        bot.sendMessage(el, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${lotNumber}` }]] } });
+      } catch (error) {
+        logger.warn(`User: ${el}, Havn't received notification. Reason: ${error}`)
+      }
+    });
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   logger.info(`${usersChatId.length} користувачів отримали нагадування про новий лот`);
