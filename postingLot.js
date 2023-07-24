@@ -169,7 +169,11 @@ const sendLotToRegistredCustomers = async (message, lotNumber) => {
     const reminderPromises = chatIdsGroup.map(el =>
       bot.sendMessage(el, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${lotNumber}` }]] } })
     );
-    await Promise.all(reminderPromises);
+    try {
+      await Promise.all(reminderPromises);
+    } catch (error) {
+      logger.warn(`Something went wrong on sending notification ${error}`)
+    }
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   logger.info(`${usersChatId.length} користувачів отримали нагадування про новий лот`);
