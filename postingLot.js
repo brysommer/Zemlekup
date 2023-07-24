@@ -163,11 +163,16 @@ const sendFiltredToChat = async (chatId, callback_data, searchRange) => {
 const sendLotToRegistredCustomers = async (message, lotNumber) => {
   const users = await findALLUsers();
   const usersChatId = users.map(el => el.chat_id);
-  const reminderPromises = usersChatId.map(el => 
-    bot.sendMessage(el, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${lotNumber}` }]] } })
-  );
-  const remindMessages = await Promise.all(reminderPromises);
-  logger.info(`${remindMessages.length} користувачів отримали нагадування про новий лот`);
-}
+  const groupSize = 25;
+  for (let i = 0; i < usersChatId.length; i += groupSize) {
+    const chatIdsGroup = usersChatId.slice(i, i + groupSize);
+    const reminderPromises = chatIdsGroup.map(el =>
+      bot.sendMessage(el, message, { reply_markup: { inline_keyboard: [[{ text: "Купити ділянку", callback_data: `${lotNumber}` }]] } })
+    );
+    await Promise.all(reminderPromises);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  logger.info(`${usersChatId.length} користувачів отримали нагадування про новий лот`);
+};
 
 export { postingLots, sendAvaliableToChat, autoPosting, filterKeyboard, sendFiltredToChat, userMenegment }
