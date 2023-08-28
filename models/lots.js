@@ -3,57 +3,62 @@ import { sequelize } from './sequelize.js';
 import { logger } from '../logger/index.js';
 
 
-class User extends Model {}
-User.init({
-    chat_id: {
+class Lot extends Model {}
+Lot.init({
+    area: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true
     },
     price: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: DataTypes.INTEGER,
+        allowNull: false
     },
-    yield: {
+    revenue: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     },
-    lotNumber: {
+    cadastral_number: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    state: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    region: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    tenant: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    lease_term: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    lot_status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'new'
+    },
+    message_id: {
         type: DataTypes.INTEGER,
         allowNull: true
     },
-    isAuthenticated: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
-    },
-    contact: {
-        type: DataTypes.STRING,
+    user_id: {
+        type: DataTypes.INTEGER,
         allowNull: true
     },
-    email: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    chatStatus: {
+    user_name: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: ''
     },
-    birthdaydate: {
+    contact: {
         type: DataTypes.STRING,
         allowNull: true
-    },
-    isBan: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
-    },
-    recentMessage: {
-        type: DataTypes.INTEGER,
-        allowNull: true
-    },
-    
+    },    
 
 }, {
     freezeTableName: false,
@@ -62,14 +67,14 @@ User.init({
     sequelize
 });
 
-const createNewUser = async (userData) => {
+const createNewLot = async (lotData) => {
     let res;
     try {
-        res = await User.create({ ...userData });
+        res = await Lot.create(lotData);
         res = res.dataValues;
         logger.info(`Created user with id: ${res.id}`);
     } catch (err) {
-        logger.error(`Impossible to create user: ${err}`);
+        logger.error(`Impossible to create lot: ${err}`);
     }
     return res;
 };
@@ -81,7 +86,7 @@ const createNewUserByChatId = async (chat_id) => {
         res = res.dataValues;
         logger.info(`Created user with id: ${res.id}`);
     } catch (err) {
-        logger.error(`Impossible to create user: ${err}`);
+        logger.error(`Impossible to create lot: ${err}`);
     }
     return res;
 };
@@ -175,18 +180,6 @@ const deleteUserByChatId = async (chat_id) => {
 };
 
 export {
-    User,
-    createNewUser,
-    updateUserByChatId,
-    userLogin,
-    userLogout,
-    findUserById,
-    findUsersByStatus,
-    findUserByChatId,
-    createNewUserByChatId,
-    updateChatStatusByChatId,
-    updateRecentMessageByChatId,
-    userIsBanUpdate,
-    deleteUserByChatId,
-    findALLUsers
+    Lot,
+    createNewLot,
 };   

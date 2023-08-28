@@ -5,6 +5,7 @@ import { getLotContentByID } from './interval.js';
 import { logger } from './logger/index.js';
 import { keyboards } from './language_ua.js';
 import { findUsersByStatus, findALLUsers, userIsBanUpdate, findUserByChatId, deleteUserByChatId } from './models/users.js';
+import { getLotData } from './lotmanipulation.js';
 
 const filterKeyboard = async (chatId, filterName, range) => {
   const stateValues = await readGoogle(range);
@@ -49,6 +50,8 @@ const autoPosting = async () => {
   for (let index = 0; index < lotsContent.length; index++) {
     const element = lotsContent[index];
     const lotNumber = pendingLots[index];
+    //here adding lot to database
+    getLotData(lotNumber);
     try {
       const postedLot = await bot.sendMessage(dataBot.channelId, element, { reply_markup: keyboards.channelKeyboard });
       await sendLotToRegistredCustomers(element, lotNumber);

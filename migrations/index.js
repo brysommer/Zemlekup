@@ -1,4 +1,5 @@
 import { User, createNewUser } from '../models/users.js';
+import { Lot } from '../models/lots.js'
 import { logger } from '../logger/index.js';
 
 const DEBUG = true;
@@ -7,6 +8,7 @@ const main = async () => {
     try {
         const syncState = await Promise.all([
             User.sync(),
+            Lot.sync(),
         ]);
         
         
