@@ -7,35 +7,44 @@ class Lot extends Model {}
 Lot.init({
     area: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: 0,
     },
     price: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true,
+        defaultValue: 0,
     },
     revenue: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
     },
     cadastral_number: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true,
+        defaultValue: 'not specified'
     },
     state: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true,
+        defaultValue: 'not specified'
     },
     region: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true,
+        defaultValue: 'not specified'
     },
     tenant: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true,
+        defaultValue: 'not specified',
+        
     },
     lease_term: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true,
+        defaultValue: 0,
     },
     lot_status: {
         type: DataTypes.STRING,
@@ -58,7 +67,11 @@ Lot.init({
     contact: {
         type: DataTypes.STRING,
         allowNull: true
-    },    
+    },
+    lotNumber: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    }  
 
 }, {
     freezeTableName: false,
@@ -72,7 +85,7 @@ const createNewLot = async (lotData) => {
     try {
         res = await Lot.create(lotData);
         res = res.dataValues;
-        logger.info(`Created user with id: ${res.id}`);
+        logger.info(`Created lot with id: ${res.id}`);
     } catch (err) {
         logger.error(`Impossible to create lot: ${err}`);
     }

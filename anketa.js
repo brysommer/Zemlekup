@@ -42,7 +42,11 @@ export const anketaListiner = async() => {
           try {
             await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]);
             await editingMessageReserved(selectedLot);
-            logger.info(`USER_ID: ${chatId} reserved lot#${selectedLot}`);
+            if (userInfo?.isAuthenticated) {
+              logger.info(`User: ${userInfo.firstname} reserved lot#${selectedLot}. Contact information: ${userInfo.contact}`);
+            } else {
+              logger.info(`Unregistred user reserved lot#${selectedLot}, USER_ID: ${chatId} `);
+            }
             await updateChatStatusByChatId(chatId, '');
           } catch (error) {
             logger.warn(`Impossible reserve lot#${selectedLot}. Error: ${error}`);
@@ -130,26 +134,28 @@ export const anketaListiner = async() => {
         await bot.sendMessage(chatId, `Ваш акаунт заблоковано`);
         return
       } else if (msg.contact) {
-        bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+        bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
         const userData = await updateUserByChatId(chatId, { 
           firstname: msg.contact.first_name,
           contact: msg.contact.phone_number,
         });
-        
-        const message = await bot.sendMessage(chatId, phrases.dataConfirmation(userData.contact, userData.firstname), { 
+        logger.info(`Unregistred user ID: ${chatId} shared contact. Name: ${msg.contact.first_name}, Phone: ${msg.contact.phone_number}`);
+        const message = await bot.sendMessage(chatId, phrases.dataConfirmation(userData?.contact, userData?.firstname), { 
           reply_markup: keyboards.inlineConfirmation });
         await updateRecentMessageByChatId(chatId, message.message_id);
 
       } else if (userInfo?.chatStatus === 'phoneManual') {
-        bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+        bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
         await updateUserByChatId(chatId, { contact: msg.text, chatStatus: 'nameManual' });
+        logger.info(`Unregistred user ID: ${chatId} posted contact. Contact: ${msg.text}`);
         const message = await bot.sendMessage(chatId, phrases.nameRequest);
         await updateRecentMessageByChatId(chatId, message.message_id)
       } else if (userInfo?.chatStatus === 'nameManual') {
-        bot.deleteMessage(chatId, userInfo.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
+        bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
         const message = await bot.sendMessage(chatId, phrases.dataConfirmation(userInfo.contact, msg.text), {
           reply_markup: keyboards.inlineConfirmation });
-        await updateRecentMessageByChatId(chatId, message.message_id)
+        await updateRecentMessageByChatId(chatId, message.message_id);
+        logger.info(`Unregistred user ID: ${chatId} posted name. Name: ${msg.text}`);
         await updateUserByChatId(chatId, {
           firstname: msg.text,
           chatStatus: '',
