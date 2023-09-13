@@ -92,27 +92,15 @@ const createNewLot = async (lotData) => {
     return res;
 };
 
-const createNewUserByChatId = async (chat_id) => {
-    let res;
-    try {
-        res = await User.create({ chat_id });
-        res = res.dataValues;
-        logger.info(`Created user with id: ${res.id}`);
-    } catch (err) {
-        logger.error(`Impossible to create lot: ${err}`);
-    }
-    return res;
-};
-
-const updateUserByChatId = async (chat_id, updateParams) => {
-    const res = await User.update({ ...updateParams } , { where: { chat_id } });
+const updateStatusByLotNumber = async (lotNumber, status) => {
+    const res = await Lot.update({ lot_status: status } , { where: { lotNumber } });
     if (res[0]) {
-        const data = await findUserByChatId(chat_id);
+        const data = await findLotBylotNumber(lotNumber);
         if (data) {
-            logger.info(`User ${data.chat_id} updated`);
+            logger.info(`Lot# ${data.lotNumber} status updated. New status: ${data.lot_status}`);
             return data;
         }
-        logger.info(`User ${chat_id} updated, but can't read result data`);
+        logger.info(`Lot#  ${lotNumber} updated, but can't read result data`);
     } 
     return undefined;
 };
@@ -162,14 +150,14 @@ const userIsBanUpdate = async (chat_id, banStatus) => {
 };
 
 
-const findUserById = async (id) => {
-    const res = await User.findAll({ where: { id: id } });
+const findLotBylotNumber = async (lotNumber) => {
+    const res = await Lot.findOne({ where: { lotNumber } });
     if (res.length > 0) return res.map(el => el.dataValues);
     return;
 };
 
-const findUsersByStatus = async (isAuthenticated) => {
-    const res = await User.findAll({ where: { isAuthenticated } });
+const findLotsByStatus = async (status) => {
+    const res = await Lot.findAll({ where: { lot_status: status } });
     if (res.length > 0) return res.map(el => el.dataValues);
     return;
 };
@@ -195,4 +183,7 @@ const deleteUserByChatId = async (chat_id) => {
 export {
     Lot,
     createNewLot,
+    updateStatusByLotNumber,
+    findLotBylotNumber,
+    findLotsByStatus
 };   

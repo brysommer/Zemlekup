@@ -4,8 +4,9 @@ import { dataBot, ranges } from './values.js';
 import { getLotContentByID } from './interval.js';
 import { logger } from './logger/index.js';
 import { keyboards } from './language_ua.js';
-import { findUsersByStatus, findALLUsers, userIsBanUpdate, findUserByChatId, deleteUserByChatId } from './models/users.js';
+import { findALLUsers, userIsBanUpdate, findUserByChatId, deleteUserByChatId } from './models/users.js';
 import { getLotData } from './lotmanipulation.js';
+import { createNewReserv } from './models/reservations.js';
 
 const filterKeyboard = async (chatId, filterName, range) => {
   const stateValues = await readGoogle(range);
@@ -52,6 +53,9 @@ const autoPosting = async () => {
     const lotNumber = pendingLots[index];
     //here adding lot to database
     getLotData(lotNumber);
+    //here adding reserv for this lot to database
+    const newLot = await createNewReserv(lotNumber);
+    console.log(newLot);
     try {
       const postedLot = await bot.sendMessage(dataBot.channelId, element, { reply_markup: keyboards.channelKeyboard });
       await sendLotToRegistredCustomers(element, lotNumber);

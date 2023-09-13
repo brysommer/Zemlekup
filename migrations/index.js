@@ -1,14 +1,17 @@
 import { User, createNewUser } from '../models/users.js';
-import { Lot } from '../models/lots.js'
+import { Lot } from '../models/lots.js';
+import { Reserv } from '../models/reservations.js'
 import { logger } from '../logger/index.js';
 
-const DEBUG = true;
+
+const DEBUG = false;
 
 const main = async () => {
     try {
         const syncState = await Promise.all([
             User.sync(),
             Lot.sync(),
+            Reserv.sync(),
         ]);
         
         

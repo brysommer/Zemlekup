@@ -11,14 +11,18 @@ import {
   createNewUserByChatId,
   updateUserByChatId,
   findUserByChatId
-} from './models/users.js'
+} from './models/users.js';
+import { updateReservist_idByLotNumber, findReservByLotNumber } from './models/reservations.js';
+import { updateStatusByLotNumber, findLotBylotNumber } from './models/lots.js';
+import { myLotsDataList } from './modules/mylots.js';
 
 export const anketaListiner = async() => {
     bot.setMyCommands([
       {command: '/start', description: 'Почати'},
       {command: '/list', description: 'Показати усі доступні лоти'},
       {command: '/filter', description: 'Фільтрувати ділянки за областями'},
-      {command: '/reserved', description: 'Переглянути заброньовані ділянки'}
+      {command: '/reserved', description: 'Переглянути заброньовані ділянки'},
+      {command: '/mylots', description: 'Переглянути придбані ділянки'}
     ]);
 
     bot.on("callback_query", async (query) => {
@@ -38,7 +42,8 @@ export const anketaListiner = async() => {
       } else if(!isNaN(Number(action))) {
         let selectedLot = query.data;
         const choosenLotStatus = await readGoogle(ranges.statusCell(selectedLot));
-        if (choosenLotStatus[0] === 'new') {
+        const reserv = await findReservByLotNumber(selectedLot);
+        if (choosenLotStatus[0] === 'new' || reserv?.reservist_id == chatId) {
           try {
             await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]);
             await editingMessageReserved(selectedLot);
@@ -53,8 +58,10 @@ export const anketaListiner = async() => {
           }
           try {
             await writeGoogle(ranges.user_idCell(selectedLot), [[`${chatId}`]]);
+            //here We adding reservist chatid to reservations sheet will delate line over in next updates
+            await updateReservist_idByLotNumber(chatId, selectedLot);
           } catch (error) {
-            logger.warn(`Impossible to write chatId#${chatId} to sheet. Error: ${err}`);
+            logger.warn(`Impossible to write chatId#${chatId} to sheet. Error: ${error}`);
           }
           checkStatus(selectedLot, chatId);
           await updateUserByChatId(chatId, { lotNumber: selectedLot });
@@ -65,7 +72,9 @@ export const anketaListiner = async() => {
             const message = await bot.sendMessage(chatId, phrases.contactRequest, { reply_markup: keyboards.contactRequestInline });
             await updateRecentMessageByChatId(chatId, message.message_id);  
           }
-        } else bot.sendMessage(chatId, phrases.aleadySold);
+        } else 
+        //here waitlist updating function starting
+        bot.sendMessage(chatId, phrases.aleadySold);
       } else if(checkRegex(action)) {
         await sendFiltredToChat(chatId, action, ranges.stateColumn);
       }
@@ -111,6 +120,7 @@ export const anketaListiner = async() => {
               await bot.sendMessage(chatId, phrases.thanksForOrder(userInfo.firstname));
               await bot.sendMessage(chatId, soldLotContent); 
               logger.warn(`USER_ID: ${chatId} comleate order`);
+              //here sanding reminder for users in waiting list that lot they waitng already sold
               await updateUserByChatId(chatId, 
               { 
                 isAuthenticated: true,
@@ -194,6 +204,13 @@ export const anketaListiner = async() => {
         case 'Зробити замовлення':
         case '/list':
           await sendAvaliableToChat(msg.chat.id, bot);
+          break;
+        case '/mylots':
+          bot.sendMessage(chatId, 'myLots!!!');
+          const messageText = await myLotsDataList(chatId);
+          if (messageText) bot.sendMessage(chatId, messageText) 
+          else bot.sendMessage(chatId, 'Нічого не знайдено');
+
           break;
       };
   });
