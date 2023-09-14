@@ -1,7 +1,7 @@
 import { dataBot } from './values.js'
 
 const phrases = {
-    greetings: 'Привіт, якщо ви хочете зробити замовлення, натисніть кнопку "Зробити замовлення".',
+    greetings: 'Вітаю, якщо Ви хочете зробити замовлення, натисніть кнопку "Зробити замовлення"',
     contactRequest: 'Нам потрібні ваші контактні дані. Отримати з контактних даних телеграм?',
     dataConfirmation: (customerName, customerPhone) => {
         return `Ваш номер телефону: ${customerPhone}. Ваше імя ${customerName}. Дані вірні?`;
