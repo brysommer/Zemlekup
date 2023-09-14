@@ -13,7 +13,7 @@ import {
   findUserByChatId
 } from './models/users.js';
 import { updateReservist_idByLotNumber, findReservByLotNumber } from './models/reservations.js';
-import { updateStatusByLotNumber, findLotBylotNumber } from './models/lots.js';
+import { updateStatusByLotNumber, updateUserIDByLotNumber } from './models/lots.js';
 import { myLotsDataList } from './modules/mylots.js';
 
 export const anketaListiner = async() => {
@@ -113,6 +113,8 @@ export const anketaListiner = async() => {
           if (status[0] === 'reserve') {
             try {
               await writeGoogle(ranges.statusCell(userInfo.lotNumber), [['done']]);
+              await updateStatusByLotNumber(userInfo.lotNumber, 'done');
+              await updateUserIDByLotNumber(userInfo.lotNumber, chatId);
               await writeGoogle(ranges.userNameCell(userInfo.lotNumber), [[userInfo.firstname]]);
               await writeGoogle(ranges.userPhoneCell(userInfo.lotNumber), [[userInfo.contact]]);
               await editingMessage(userInfo.lotNumber);
@@ -210,7 +212,6 @@ export const anketaListiner = async() => {
           const messageText = await myLotsDataList(chatId);
           if (messageText) bot.sendMessage(chatId, messageText) 
           else bot.sendMessage(chatId, 'Нічого не знайдено');
-
           break;
       };
   });

@@ -105,15 +105,15 @@ const updateStatusByLotNumber = async (lotNumber, status) => {
     return undefined;
 };
 
-const updateChatStatusByChatId = async (chat_id, chatStatus) => {
-    const res = await User.update({ chatStatus } , { where: { chat_id } });
+const updateUserIDByLotNumber = async (lotNumber, user_id) => {
+    const res = await Lot.update({ user_id } , { where: { lotNumber } });
     if (res[0]) {
-        const data = await findUserByChatId(chat_id);
+        const data = await findLotBylotNumber(lotNumber);
         if (data) {
-            logger.info(`User ${data.chat_id} updated`);
+            logger.info(`Lot# ${data.chat_id} user_id updated.`);
             return data;
         }
-        logger.info(`User ${chat_id} updated, but can't read result data`);
+        logger.info(`Lot#  ${lotNumber} updated, but can't read result data`);
     } 
     return undefined;
 };
@@ -185,5 +185,6 @@ export {
     createNewLot,
     updateStatusByLotNumber,
     findLotBylotNumber,
-    findLotsByStatus
+    findLotsByStatus,
+    updateUserIDByLotNumber
 };   
