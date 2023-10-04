@@ -52,9 +52,9 @@ const autoPosting = async () => {
     const element = lotsContent[index];
     const lotNumber = pendingLots[index];
     //here adding lot to database
-    getLotData(lotNumber);
+    const newLot = await getLotData(lotNumber);
     //here adding reserv for this lot to database
-    const newLot = await createNewReserv(lotNumber);
+    const newReserv = await createNewReserv(lotNumber);
     console.log(newLot);
     try {
       const postedLot = await bot.sendMessage(dataBot.channelId, element, { reply_markup: keyboards.channelKeyboard });
@@ -142,17 +142,19 @@ const sendAvaliableToChat = async (chatId, bot) => {
   });
 };
 
+const cuttingCallbackData = (cuttedWord, word) => {
+  const regex = new RegExp(`${word}(.+)`, 'i');
+  const match = cuttedWord.match(regex);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return null;
+};
+
 const sendFiltredToChat = async (chatId, callback_data, searchRange) => {
-  const cuttingCallbackData= (cuttedWord) => {
-    const regex = /state(.+)/i;
-    const match = cuttedWord.match(regex);
-    if (match && match[1]) {
-      return match[1].trim();
-    }
-    return null;
-  };
   
-  const searchWord = cuttingCallbackData(callback_data);
+  
+  const searchWord = cuttingCallbackData(callback_data, 'state');
   const readedValues = await readGoogle(searchRange);
   const lotsStatus = await readGoogle(ranges.statusColumn);
 
@@ -185,4 +187,4 @@ const sendLotToRegistredCustomers = async (message, lotNumber) => {
   logger.info(`${usersChatId.length} користувачів отримали нагадування про новий лот`);
 };
 
-export { postingLots, sendAvaliableToChat, autoPosting, filterKeyboard, sendFiltredToChat, userMenegment }
+export { postingLots, sendAvaliableToChat, autoPosting, filterKeyboard, sendFiltredToChat, userMenegment, cuttingCallbackData }

@@ -7,7 +7,8 @@ const getLotData = async (lotNumber) => {
     const data = await readGoogle(range);
     const lotData = {
         cadastral_number: data[2],
-        state: data[6],
+        state: data[11],
+        region: data[12],
         lot_status: data[13],
         lotNumber
     };

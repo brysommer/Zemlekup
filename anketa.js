@@ -3,7 +3,7 @@ import { ranges } from './values.js';
 import { writeGoogle, readGoogle } from './crud.js';
 import { checkStatus, editingMessage, getLotContentByID, editingMessageReserved } from './interval.js';
 import { phrases, keyboards } from './language_ua.js';
-import { sendAvaliableToChat, filterKeyboard, sendFiltredToChat } from './postingLot.js';
+import { sendAvaliableToChat, filterKeyboard, sendFiltredToChat, cuttingCallbackData } from './postingLot.js';
 import { logger } from './logger/index.js';
 import { 
   updateRecentMessageByChatId,
@@ -12,9 +12,11 @@ import {
   updateUserByChatId,
   findUserByChatId
 } from './models/users.js';
-import { updateReservist_idByLotNumber, findReservByLotNumber } from './models/reservations.js';
-import { updateStatusByLotNumber, updateUserIDByLotNumber } from './models/lots.js';
+import { updateReservist_idByLotNumber, findReservByLotNumber, createNewReserv } from './models/reservations.js';
+import { updateStatusByLotNumber, updateLotIDByLotNumber } from './models/lots.js';
 import { myLotsDataList } from './modules/mylots.js';
+import { addUserToWaitingList } from './modules/waitinglist.js';
+//import { regionFilterKeyboard, sendFiltredByRegToChat } from './modules/regionfilter.js';
 
 export const anketaListiner = async() => {
     bot.setMyCommands([
@@ -31,8 +33,8 @@ export const anketaListiner = async() => {
       const userInfo = await findUserByChatId(chatId);
       
       
-      const checkRegex = (string) => {
-        const regex = /state\p{L}+/gu;
+      const checkRegex = (string, word) => {
+        const regex = new RegExp(`${word}\\p{L}+`, 'gu');
         return regex.test(string);
       }
 
@@ -43,10 +45,11 @@ export const anketaListiner = async() => {
         let selectedLot = query.data;
         const choosenLotStatus = await readGoogle(ranges.statusCell(selectedLot));
         const reserv = await findReservByLotNumber(selectedLot);
+        if (!reserv) await createNewReserv(selectedLot);
         if (choosenLotStatus[0] === 'new' || reserv?.reservist_id == chatId) {
           try {
-            await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]);
-            await editingMessageReserved(selectedLot);
+            //await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]);
+            //await editingMessageReserved(selectedLot);
             if (userInfo?.isAuthenticated) {
               logger.info(`User: ${userInfo.firstname} reserved lot#${selectedLot}. Contact information: ${userInfo.contact}`);
             } else {
@@ -72,12 +75,26 @@ export const anketaListiner = async() => {
             const message = await bot.sendMessage(chatId, phrases.contactRequest, { reply_markup: keyboards.contactRequestInline });
             await updateRecentMessageByChatId(chatId, message.message_id);  
           }
-        } else 
+        } else {
         //here waitlist updating function starting
-        bot.sendMessage(chatId, phrases.aleadySold);
-      } else if(checkRegex(action)) {
+        const waitlist = await addUserToWaitingList(selectedLot, chatId);
+        if (waitlist) {
+          await bot.sendMessage(chatId, `${phrases.waitlist}${waitlist}`);
+        } else {
+          await bot.sendMessage(chatId, phrases.alreadyWaiting);
+        }
+        //bot.sendMessage(chatId, phrases.aleadySold);
+        }
+      } else if(checkRegex(action, 'state')) {
+        //const stateName = cuttingCallbackData(action, 'state');
+        //console.log(stateName);
+        //await regionFilterKeyboard(chatId, stateName);
         await sendFiltredToChat(chatId, action, ranges.stateColumn);
-      }
+      } //else if(checkRegex(action, 'region')) {
+       // const regionName = cuttingCallbackData(action, 'region');
+       // console.log(regionName);
+       // await sendFiltredByRegToChat(chatId, regionName);
+    //  }
       switch (action) {
         case '/start':
           bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
@@ -109,12 +126,12 @@ export const anketaListiner = async() => {
           break;
         case '/comleate':
           bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
-          const status = await readGoogle(ranges.statusCell(userInfo.lotNumber));
+          const status = await readGoogle(ranges.statusCell(userInfo?.lotNumber));
           if (status[0] === 'reserve') {
             try {
               await writeGoogle(ranges.statusCell(userInfo.lotNumber), [['done']]);
               await updateStatusByLotNumber(userInfo.lotNumber, 'done');
-              await updateUserIDByLotNumber(userInfo.lotNumber, chatId);
+              await updateLotIDByLotNumber(userInfo.lotNumber, chatId);
               await writeGoogle(ranges.userNameCell(userInfo.lotNumber), [[userInfo.firstname]]);
               await writeGoogle(ranges.userPhoneCell(userInfo.lotNumber), [[userInfo.contact]]);
               await editingMessage(userInfo.lotNumber);
@@ -134,7 +151,6 @@ export const anketaListiner = async() => {
           } else {
             bot.sendMessage(chatId, phrases.aleadySold);
           }
-          
         break;
       }
     })

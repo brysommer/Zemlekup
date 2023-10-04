@@ -6,7 +6,7 @@ import { logger } from '../logger/index.js';
 class Reserv extends Model {}
 Reserv.init({
     waitlist_ids: {
-        type: DataTypes.ARRAY((DataTypes.INTEGER)),
+        type: DataTypes.STRING,
         allowNull: true,
     },
     reservist_id: {
@@ -51,7 +51,7 @@ const updateReservist_idByLotNumber = async (reservist_id, lotNumber) => {
 };
 
 const updateWaitlist_idsByLotNumber = async (waitlist_ids, lotNumber) => {
-    const res = await Reserv.update({ waitlist_ids } , { where: { lotNumber } });
+    const res = await Reserv.update( { waitlist_ids }, { where: { lotNumber } });
     if (res[0]) {
         const data = await findReservByLotNumber(lotNumber);
         if (data) {

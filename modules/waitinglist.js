@@ -2,14 +2,37 @@ import {
     findReservByLotNumber,
     updateWaitlist_idsByLotNumber,
     updateReservist_idByLotNumber
-} from './models/reservations.js';
+} from '../models/reservations.js';
+
+const hasMatch = (waitlist, chatId) => {
+    for (let i = 0; i < waitlist.length; i++) {
+        if (waitlist[i] == chatId) {
+            return true;
+        }
+    }
+    return false;
+};
 
 const addUserToWaitingList = async (selectedLot, chatId) => {
     const reservData = await findReservByLotNumber(selectedLot);
-    const waitlist = reservData.waitlist_ids;
-    waitlist.push(chatId);
-    const newWaitlist = await updateWaitlist_idsByLotNumber(waitlist, selectedLot);
-    return waitlist.lenght;
+    let waitlist = reservData.waitlist_ids;
+    if (!waitlist) {
+        waitlist = [];
+    } 
+    else {
+        waitlist = waitlist.toString();
+        waitlist = waitlist.split(', ');
+    }
+    const match = hasMatch(waitlist, chatId);
+    if (!match) {
+        waitlist.push(chatId);
+        const waitlistString = waitlist.join(', ');
+        const newWaitlist = await updateWaitlist_idsByLotNumber(waitlistString, selectedLot);
+        const updatedStr = newWaitlist.waitlist_ids.toString();
+        const updatedArray = updatedStr.split(', ')
+        const arrayLength = updatedArray.length;
+        return arrayLength;
+    }
 };
 
 const moveWaitlistOneStepInFront = async (selectedLot) => {

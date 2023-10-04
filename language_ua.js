@@ -16,6 +16,8 @@ const phrases = {
     wrongPhone: 'Невірний номер телефону. Будь ласка, введіть номер телефону ще раз:',
     phoneRules: 'Введіть, будь ласка, номер телефону. Або інші контактні дані',
     nameRequest: 'Введіть своє ім\'я:',
+    waitlist: 'Вас додано до черги за номером #',
+    alreadyWaiting: 'Ви вже в списку очікування'
   };
   
 const keyboards = {
@@ -54,6 +56,12 @@ const keyboards = {
       inline_keyboard: [
         [{ text: 'Оформити замовлення', callback_data: '/comleate' }],
       ]  
+    },
+    waitlistdialogue: {
+      inline_keyboard: [[
+        { text: 'ТАК', callback_data: '/addwaitlist' },
+        { text: 'НІ', callback_data: '/start' }
+      ],]  
     }
 
 };

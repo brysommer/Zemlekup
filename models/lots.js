@@ -105,7 +105,7 @@ const updateStatusByLotNumber = async (lotNumber, status) => {
     return undefined;
 };
 
-const updateUserIDByLotNumber = async (lotNumber, user_id) => {
+const updateLotIDByLotNumber = async (lotNumber, user_id) => {
     const res = await Lot.update({ user_id } , { where: { lotNumber } });
     if (res[0]) {
         const data = await findLotBylotNumber(lotNumber);
@@ -162,6 +162,18 @@ const findLotsByStatus = async (status) => {
     return;
 };
 
+const findLotsByStatusAndState = async (status, state) => {
+    const res = await Lot.findAll({ where: { lot_status: status, state } });
+    if (res.length > 0) return res.map(el => el.dataValues);
+    return;
+};
+
+const findLotsByStatusAndRegion = async (status, region) => {
+    const res = await Lot.findAll({ where: { lot_status: status, region } });
+    if (res.length > 0) return res.map(el => el.dataValues);
+    return;
+};
+
 const findALLUsers = async () => {
     const res = await User.findAll({ where: {  } });
     if (res.length > 0) return res.map(el => el.dataValues);
@@ -186,5 +198,7 @@ export {
     updateStatusByLotNumber,
     findLotBylotNumber,
     findLotsByStatus,
-    updateUserIDByLotNumber
+    updateLotIDByLotNumber,
+    findLotsByStatusAndState,
+    findLotsByStatusAndRegion
 };   
