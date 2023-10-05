@@ -114,9 +114,12 @@ const postingLots = () => {
             const rowNumber = parseInt(message.text);
             const lot = await readGoogle(ranges.postContentLine(rowNumber));
             if (lot && lot.length > 0) {
+              const message = `\u{1F4CA} ${lot[0]} \n ${lot[1]} \n ${lot[2]} \n ${lot[3]} \n \u{1F69C} ${lot[4]}`;
+              /*
               const message = lot.join('\n')
               .replace(/^/, '\u{1F4CA} ') // add diagramm in 1 line 
               .replace(/^.*\n.*\n.*\n.*\n/, '$&\u{1F69C} '); // add tractor in 4 line
+              */
               const sentMessage = await bot.sendMessage(dataBot.channelId, message, { reply_markup: keyboards.channelKeyboard });
               await sendLotToRegistredCustomers(message, rowNumber);
               await writeGoogle(ranges.message_idCell(rowNumber), [[sentMessage.message_id]]);

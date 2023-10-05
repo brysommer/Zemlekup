@@ -44,16 +44,17 @@ export const anketaListiner = async() => {
       } else if(!isNaN(Number(action))) {
         let selectedLot = query.data;
         const choosenLotStatus = await readGoogle(ranges.statusCell(selectedLot));
-        const reserv = await findReservByLotNumber(selectedLot);
-        if (!reserv) await createNewReserv(selectedLot);
-        if (choosenLotStatus[0] === 'new' || reserv?.reservist_id == chatId) {
+        //const reserv = await findReservByLotNumber(selectedLot); поки тушим резерви
+        //if (!reserv) await createNewReserv(selectedLot);
+        if (choosenLotStatus[0] === 'new'/* || reserv?.reservist_id == chatId*/) {
           try {
-            //await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]);
-            //await editingMessageReserved(selectedLot);
+            if (!userInfo) await createNewUserByChatId(chatId);
+            await writeGoogle(ranges.statusCell(selectedLot), [['reserve']]); //мішають чергам
+            await editingMessageReserved(selectedLot); //мішають чергам
             if (userInfo?.isAuthenticated) {
-              logger.info(`User: ${userInfo.firstname} reserved lot#${selectedLot}. Contact information: ${userInfo.contact}`);
+              logger.info(`*User: ${userInfo?.firstname} reserved lot#${selectedLot}. Contact information: ${userInfo?.contact}*`);
             } else {
-              logger.info(`Unregistred user reserved lot#${selectedLot}, USER_ID: ${chatId} `);
+              logger.info(`*Unregistred user reserved lot#${selectedLot}, USER_ID: ${chatId}* `);
             }
             await updateChatStatusByChatId(chatId, '');
           } catch (error) {
@@ -62,7 +63,7 @@ export const anketaListiner = async() => {
           try {
             await writeGoogle(ranges.user_idCell(selectedLot), [[`${chatId}`]]);
             //here We adding reservist chatid to reservations sheet will delate line over in next updates
-            await updateReservist_idByLotNumber(chatId, selectedLot);
+            //await updateReservist_idByLotNumber(chatId, selectedLot); поки тушим
           } catch (error) {
             logger.warn(`Impossible to write chatId#${chatId} to sheet. Error: ${error}`);
           }
@@ -138,7 +139,7 @@ export const anketaListiner = async() => {
               const soldLotContent = await getLotContentByID(userInfo.lotNumber);
               await bot.sendMessage(chatId, phrases.thanksForOrder(userInfo.firstname));
               await bot.sendMessage(chatId, soldLotContent); 
-              logger.warn(`USER_ID: ${chatId} comleate order`);
+              logger.warn(`*USER_ID: ${chatId} comleate order. Lot#${userInfo.lotNumber}. Name: ${userInfo.firstname}. Contact: ${userInfo.contact}*`);
               //here sanding reminder for users in waiting list that lot they waitng already sold
               await updateUserByChatId(chatId, 
               { 
@@ -146,7 +147,7 @@ export const anketaListiner = async() => {
                 lotNumber: null,
               }) 
             } catch (error) {
-              logger.error(`Something went wrong on finishing order for lot#${userInfo?.lotNumber} from customer ${chatId}. Error: ${error}`);
+              logger.error(`*Something went wrong on finishing order for lot#${userInfo?.lotNumber} from customer ${chatId}. Name: ${userInfo?.firstname}. Contact: ${userInfo?.contact}*. Error: ${error}`);
             }
           } else {
             bot.sendMessage(chatId, phrases.aleadySold);
@@ -167,7 +168,7 @@ export const anketaListiner = async() => {
           firstname: msg.contact.first_name,
           contact: msg.contact.phone_number,
         });
-        logger.info(`Unregistred user ID: ${chatId} shared contact. Name: ${msg.contact.first_name}, Phone: ${msg.contact.phone_number}`);
+        logger.info(`*Unregistred user ID: ${chatId} shared contact. Name: ${msg.contact.first_name}, Phone: ${msg.contact.phone_number}*`);
         const message = await bot.sendMessage(chatId, phrases.dataConfirmation(userData?.contact, userData?.firstname), { 
           reply_markup: keyboards.inlineConfirmation });
         await updateRecentMessageByChatId(chatId, message.message_id);
@@ -175,7 +176,7 @@ export const anketaListiner = async() => {
       } else if (userInfo?.chatStatus === 'phoneManual') {
         bot.deleteMessage(chatId, userInfo?.recentMessage).catch((error) => {logger.warn(`Помилка видалення повідомлення: ${error}`);});
         await updateUserByChatId(chatId, { contact: msg.text, chatStatus: 'nameManual' });
-        logger.info(`Unregistred user ID: ${chatId} posted contact. Contact: ${msg.text}`);
+        logger.info(`*Unregistred user ID: ${chatId} posted contact. Contact: ${msg.text}*`);
         const message = await bot.sendMessage(chatId, phrases.nameRequest);
         await updateRecentMessageByChatId(chatId, message.message_id)
       } else if (userInfo?.chatStatus === 'nameManual') {
@@ -183,7 +184,7 @@ export const anketaListiner = async() => {
         const message = await bot.sendMessage(chatId, phrases.dataConfirmation(userInfo.contact, msg.text), {
           reply_markup: keyboards.inlineConfirmation });
         await updateRecentMessageByChatId(chatId, message.message_id);
-        logger.info(`Unregistred user ID: ${chatId} posted name. Name: ${msg.text}`);
+        logger.info(`*Unregistred user ID: ${chatId} posted name. Name: ${msg.text}*`);
         await updateUserByChatId(chatId, {
           firstname: msg.text,
           chatStatus: '',
@@ -224,7 +225,7 @@ export const anketaListiner = async() => {
           await sendAvaliableToChat(msg.chat.id, bot);
           break;
         case '/mylots':
-          bot.sendMessage(chatId, 'myLots!!!');
+          await bot.sendMessage(chatId, '*Лоти які належать вам:*', { parse_mode: 'Markdown' });
           const messageText = await myLotsDataList(chatId);
           if (messageText) bot.sendMessage(chatId, messageText) 
           else bot.sendMessage(chatId, 'Нічого не знайдено');

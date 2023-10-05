@@ -12,7 +12,7 @@ const logger = {
     async createNewLog(channelId, description) {
         let res;
         try {
-            res = await bot.sendMessage(channelId, description);
+            res = await bot.sendMessage(channelId, description, { parse_mode: 'Markdown' });
         } catch (err) {
             console.log(`🚩 ${this.now} Impossible to create log: ${err}`);
         }
