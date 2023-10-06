@@ -152,7 +152,7 @@ const userIsBanUpdate = async (chat_id, banStatus) => {
 
 const findLotBylotNumber = async (lotNumber) => {
     const res = await Lot.findOne({ where: { lotNumber } });
-    if (res.length > 0) return res.map(el => el.dataValues);
+    if (res) return res.dataValues;
     return;
 };
 

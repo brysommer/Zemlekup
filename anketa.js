@@ -13,9 +13,10 @@ import {
   findUserByChatId
 } from './models/users.js';
 import { updateReservist_idByLotNumber, findReservByLotNumber, createNewReserv } from './models/reservations.js';
-import { updateStatusByLotNumber, updateLotIDByLotNumber } from './models/lots.js';
+import { updateStatusByLotNumber, updateLotIDByLotNumber, findLotBylotNumber } from './models/lots.js';
 import { myLotsDataList } from './modules/mylots.js';
 import { addUserToWaitingList } from './modules/waitinglist.js';
+import { getLotData } from './lotmanipulation.js';
 //import { regionFilterKeyboard, sendFiltredByRegToChat } from './modules/regionfilter.js';
 
 export const anketaListiner = async() => {
@@ -44,7 +45,14 @@ export const anketaListiner = async() => {
       } else if(!isNaN(Number(action))) {
         let selectedLot = query.data;
         const choosenLotStatus = await readGoogle(ranges.statusCell(selectedLot));
-        //const reserv = await findReservByLotNumber(selectedLot); поки тушим резерви
+        const lotNumber = selectedLot-1;
+        const lotData = await findLotBylotNumber(lotNumber);
+        if (!lotData) {
+          const newLot = await getLotData(selectedLot);
+          const newReserv = await createNewReserv(selectedLot);
+        }
+
+        //const reserv = await findReservByLotNumber(selectedLot);
         //if (!reserv) await createNewReserv(selectedLot);
         if (choosenLotStatus[0] === 'new'/* || reserv?.reservist_id == chatId*/) {
           try {
@@ -78,13 +86,15 @@ export const anketaListiner = async() => {
           }
         } else {
         //here waitlist updating function starting
+        /*
         const waitlist = await addUserToWaitingList(selectedLot, chatId);
         if (waitlist) {
           await bot.sendMessage(chatId, `${phrases.waitlist}${waitlist}`);
         } else {
           await bot.sendMessage(chatId, phrases.alreadyWaiting);
         }
-        //bot.sendMessage(chatId, phrases.aleadySold);
+        */
+        bot.sendMessage(chatId, phrases.aleadySold);
         }
       } else if(checkRegex(action, 'state')) {
         //const stateName = cuttingCallbackData(action, 'state');
@@ -130,9 +140,10 @@ export const anketaListiner = async() => {
           const status = await readGoogle(ranges.statusCell(userInfo?.lotNumber));
           if (status[0] === 'reserve') {
             try {
+              const LotId = userInfo.lotNumber - 1;
               await writeGoogle(ranges.statusCell(userInfo.lotNumber), [['done']]);
-              await updateStatusByLotNumber(userInfo.lotNumber, 'done');
-              await updateLotIDByLotNumber(userInfo.lotNumber, chatId);
+              await updateStatusByLotNumber(LotId, 'done');
+              await updateLotIDByLotNumber(LotId, chatId);
               await writeGoogle(ranges.userNameCell(userInfo.lotNumber), [[userInfo.firstname]]);
               await writeGoogle(ranges.userPhoneCell(userInfo.lotNumber), [[userInfo.contact]]);
               await editingMessage(userInfo.lotNumber);

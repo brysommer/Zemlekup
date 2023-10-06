@@ -112,6 +112,8 @@ const postingLots = () => {
         if (message.text < 9999999 && message.text != 1) {
           try {
             const rowNumber = parseInt(message.text);
+            const newLot = await getLotData(rowNumber);
+            const newReserv = await createNewReserv(rowNumber);
             const lot = await readGoogle(ranges.postContentLine(rowNumber));
             if (lot && lot.length > 0) {
               const message = `\u{1F4CA} ${lot[0]} \n ${lot[1]} \n ${lot[2]} \n ${lot[3]} \n \u{1F69C} ${lot[4]}`;
@@ -187,7 +189,7 @@ const sendLotToRegistredCustomers = async (message, lotNumber) => {
     });
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  logger.info(`${usersChatId.length} користувачів отримали нагадування про новий лот`);
+  logger.info(`*${usersChatId.length} користувачів отримали нагадування про новий лот*`);
 };
 
 export { postingLots, sendAvaliableToChat, autoPosting, filterKeyboard, sendFiltredToChat, userMenegment, cuttingCallbackData }
